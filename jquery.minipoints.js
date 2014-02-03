@@ -1,5 +1,8 @@
-// (Small) minipoints plugin
+// (Small) waypoints plugin
 (function( $, window ) {
+	'use strict';
+
+	var DIRECTION = { DOWN: 'down', UP: 'up' };
 
 	$.fn.minipoint = function(options) {
 
@@ -10,40 +13,45 @@
 
 		function trigger(dir, e) {
 			if (opts.sticky && e.type !== 'minipoints') {
-				this.toggleClass( opts.stuckClassName , dir === 'down' );
+				this.toggleClass( opts.stuckClassName , dir === DIRECTION.DOWN );
 			}
 			opts.handler.call( this, dir );
 		}
 
+		function scrollHandler (scrollPosition, offsetEl, e) {
+			var newdir, top, offset;
+			top = $.isFunction(opts.top) ? opts.top() : offsetEl.offset().top;
+			top -= scrollPosition;
+			offset =  $.isFunction( opts.offset ) ? opts.offset() : opts.offset;
+			newdir = top < offset ? DIRECTION.UP : DIRECTION.DOWN;
+			if (this.data('dir') !== newdir || e.type === 'minipoints') {
+				trigger.call( this, this.data('dir'), e );
+			}
+			this.data('dir', newdir);
+		}
+
 		return this.each(function() {
 
-			var top, offset, dir, wrapper, offsetEl, el;
-			offsetEl = el = $(this);
+			var offsetEl = el = $(this),
+				scrollEvent = { type: 'scroll' };
 
 			if (opts.sticky && opts.wrapper.useWrapper) {
 
-				wrapper = $('<div>')
-					.addClass( opts.wrapper.className )
-					.height( el.height() );
+				el.wrap( $('<div>', {
+					class: opts.wrapper.className,
+					height: el.height()
+				}));
 
-				el.after( wrapper );
-				wrapper.append( $(this) );
-
-				offsetEl = wrapper;
+				offsetEl = el.parent('.' + opts.wrapper.className);
 			}
 
 			$(window).on('scroll resize touchmove minipoints', function(e) {
-				var newdir;
-				top = $.isFunction(opts.top) ? opts.top() : offsetEl.offset().top;
-				top -= $(window).scrollTop();
-				offset =  $.isFunction( opts.offset ) ? opts.offset() : opts.offset;
-				newdir = top < offset ? 'up' : 'down';
-				if (dir !== newdir || e.type === 'minipoints') {
-					trigger.call( el, dir, e );
-				}
-				dir = newdir;
-			}).trigger('scroll');
+				scrollHandler.call(el, $(window).scrollTop(), offsetEl, e);
+			});
 
+			scrollHandler.call(el, 0, offsetEl, scrollEvent);
+			scrollHandler.call(el, $(window).scrollTop(), offsetEl, scrollEvent);
+			
 		});
 
 	};
