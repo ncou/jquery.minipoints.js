@@ -32,7 +32,8 @@
 
 		return this.each(function() {
 
-			var offsetEl = el = $(this),
+			var el = $(this),
+				offsetEl = el,
 				scrollEvent = { type: 'scroll' };
 
 			if (opts.sticky && opts.wrapper.useWrapper) {
