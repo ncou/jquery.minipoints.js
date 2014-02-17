@@ -46,7 +46,7 @@
 				offsetEl = el.parent('.' + opts.wrapper.className);
 			}
 
-			$(window).on('scroll resize touchmove minipoints', function(e) {
+			$(window).on('scroll.minipoints resize.minipoints touchmove.minipoints minipoints', function(e) {
 				scrollHandler.call(el, $(window).scrollTop(), offsetEl, e);
 			});
 
